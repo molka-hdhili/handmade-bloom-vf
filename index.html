@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Handmade Bloom</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Wheel Banner ── */
+    #wheelBanner {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: linear-gradient(135deg, #ff7eb6, #b06abe);
+      color: white;
+      padding: 18px 28px;
+      border-radius: 20px;
+      margin: 24px auto 0;
+      max-width: 680px;
+      text-align: center;
+      flex-wrap: wrap;
+      box-shadow: 0 6px 28px rgba(176,106,190,0.35);
+      animation: bannerPop 0.5s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes bannerPop {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .wheel-banner-icon { font-size: 34px; }
+    .wheel-banner-text { flex: 1; min-width: 180px; }
+    .wheel-banner-text strong { font-size: 17px; display: block; margin-bottom: 3px; }
+    .wheel-banner-text span   { font-size: 13px; opacity: .9; }
+    .wheel-banner-btn {
+      background: white; color: #b06abe; border: none; border-radius: 30px;
+      padding: 11px 26px; font-weight: 700; cursor: pointer; font-size: 15px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.15); white-space: nowrap;
+      transition: transform 0.15s;
+    }
+    .wheel-banner-btn:hover { transform: scale(1.04); }
+
+    /* ── Wheel Modal ── */
+    #clientWheelModal {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center;
+    }
+    #clientWheelModal.open { display: flex; }
+    .client-wheel-box {
+      background: white; border-radius: 28px; padding: 36px 32px;
+      max-width: 440px; width: 92%; text-align: center; position: relative;
+      box-shadow: 0 20px 60px rgba(176,106,190,0.3);
+      animation: modalIn 0.35s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.88) translateY(30px); opacity: 0; }
+      to   { transform: scale(1)    translateY(0);    opacity: 1; }
+    }
+    .client-wheel-close {
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none; font-size: 22px;
+      cursor: pointer; color: #ccc; line-height: 1;
+    }
+    .client-wheel-close:hover { color: #999; }
+    .client-wheel-box h2 { color: #b06abe; font-size: 22px; margin-bottom: 4px; }
+    .client-wheel-box > p { color: #aaa; font-size: 13px; margin-bottom: 22px; }
+    .client-wheel-canvas-wrap {
+      position: relative; width: 290px; height: 290px;
+      margin: 0 auto 12px;
+    }
+    .client-wheel-pointer {
+      position: absolute; top: -10px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 13px solid transparent;
+      border-right: 13px solid transparent;
+      border-top: 30px solid #e91e8c;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.25));
+      z-index: 2;
+    }
+    #clientWheelResult {
+      font-size: 18px; font-weight: 800; color: #c2185b;
+      min-height: 28px; margin: 14px 0 10px;
+      animation: resultBounce 0.5s ease;
+    }
+    @keyframes resultBounce {
+      0%   { transform: scale(0.7); opacity: 0; }
+      70%  { transform: scale(1.1); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    #clientWheelSpinBtn {
+      background: linear-gradient(135deg, #ff7eb6, #b06abe);
+      color: white; border: none; border-radius: 30px;
+      padding: 13px 40px; font-size: 16px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 5px 18px rgba(176,106,190,0.4);
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    #clientWheelSpinBtn:hover:not(:disabled) { transform: scale(1.04); }
+    #clientWheelSpinBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+    #clientWheelClaimBtn {
+      display: none; width: 100%; margin-top: 14px;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      color: #0d5c36; border: none; border-radius: 30px;
+      padding: 13px 28px; font-size: 15px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 5px 18px rgba(67,233,123,0.35);
+      transition: opacity 0.2s;
+    }
+    #clientWheelClaimBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast"></div>
+
+  <header class="header">
+    <a href="#home" class="logo">
+      <img src="image/logo.png" alt="Handmade Bloom Logo" />
+      <span>Handmade Bloom</span>
+    </a>
+
+    <nav class="navbar" id="navbar">
+      <a href="#home">Accueil</a>
+      <a href="#products">Produits</a>
+      <a href="#about">À propos</a>
+      <a href="#feedback">Avis</a>
+      <a href="#contact">Contact</a>
+      <a href="login.html" id="navLoginLink">Connexion</a>
+      <a href="admin.html" id="navAdminLink" style="display:none">Admin</a>
+      <button id="navLogoutBtn" style="display:none;background:none;border:none;cursor:pointer;color:var(--pink);font-weight:600;font-size:15px;" onclick="logoutUser()">Déconnexion</button>
+      <span id="navPointsBadge" style="display:none;background:linear-gradient(135deg,#ff7eb6,#b06abe);color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;margin-left:4px;"></span>
+    </nav>
+
+    <div class="header-actions">
+      <button class="cart-btn" id="openCart">
+        🛍️ <span id="cartCount">0</span>
+      </button>
+      <button class="menu-btn" id="menuBtn">☰</button>
+    </div>
+  </header>
+
+  <!-- ── 🎁 BANNIÈRE CADEAU FIDÉLITÉ ─────────────────────────── -->
+  <div style="padding: 0 20px;">
+    <div id="wheelBanner">
+      <span class="wheel-banner-icon">🎁</span>
+      <div class="wheel-banner-text">
+        <strong>Vous avez un cadeau fidélité !</strong>
+        <span>Merci pour vos achats (<span id="wheelBannerAmount">0 DT</span>). Tournez la roue pour découvrir votre surprise !</span>
+      </div>
+      <button class=\"wheel-banner-btn\" onclick=\"openClientWheelModal(lastOrderId, lastOrderTotal)\">🎡 Tourner la roue</button>
+    </div>
+  </div>
+
+  <!-- ── HERO ──────────────────────────────────────────────── -->
+  <section class="hero" id="home">
+    <div class="hero-text">
+      <p class="tag">Créations faites main avec amour</p>
+      <h1>Des pièces handmade douces, uniques et élégantes</h1>
+      <p>
+        Découvrez une collection girly de bijoux, bougies, accessoires et cadeaux
+        personnalisés pour rendre chaque moment plus spécial.
+      </p>
+      <div class="hero-buttons">
+        <a href="#products" class="main-btn">Voir la collection</a>
+        <a href="#contact" class="second-btn">Nous contacter</a>
+      </div>
+      <div class="hero-stats">
+        <div><h3>100%</h3><span>Handmade</span></div>
+        <div><h3>+250</h3><span>Commandes</span></div>
+        <div><h3>4.9★</h3><span>Avis clients</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-card owners-card">
+        <div class="owners-photo-box">
+          <img src="image/owners.png" alt="Propriétaires de Handmade Bloom" class="owners-photo" />
+        </div>
+        <h3>Du rêve aux belles créations handmade</h3>
+        <p>
+          Rencontrez les cœurs derrière Handmade Bloom, transformant passion et créativité
+          en belles pièces faites main.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ──────────────────────────────────────────── -->
+  <section class="features">
+    <div class="feature-box"><span>🚚</span><h3>Livraison rapide</h3><p>Commande préparée avec soin et livrée rapidement.</p></div>
+    <div class="feature-box"><span>🎁</span><h3>Packaging élégant</h3><p>Un emballage doux, girly et parfait pour offrir.</p></div>
+    <div class="feature-box"><span>💖</span><h3>Création unique</h3><p>Chaque produit est fait main avec attention.</p></div>
+  </section>
+
+  <!-- ── PRODUCTS ───────────────────────────────────────────── -->
+  <section class="products-section" id="products">
+    <div class="section-title">
+      <p>Notre boutique</p>
+      <h2>Produits populaires</h2>
+    </div>
+    <div class="shop-tools">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Rechercher un produit..." />
+      </div>
+      <div class="categories">
+        <button class="category active" data-category="all">Tous</button>
+        <button class="category" data-category="bijoux">Bijoux</button>
+        <button class="category" data-category="bougies">Bougies</button>
+        <button class="category" data-category="accessoires">Accessoires</button>
+      </div>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+  </section>
+
+  <!-- ── PROMO BANNER ───────────────────────────────────────── -->
+  <section class="promo-banner">
+    <div>
+      <p>Offre spéciale</p>
+      <h2>-15% sur votre première commande</h2>
+      <span>Utilisez le code : <strong>BLOOM15</strong></span>
+    </div>
+    <a href="#products">Shop now</a>
+  </section>
+
+  <!-- ── ABOUT ──────────────────────────────────────────────── -->
+  <section class="about" id="about">
+    <div class="about-img"><img src="image/logo.png" alt="Logo Handmade Bloom" /></div>
+    <div class="about-text">
+      <p class="tag">Pourquoi nous choisir ?</p>
+      <h2>Une boutique handmade douce, moderne et personnalisée</h2>
+      <p>Chez Handmade Bloom, chaque création est imaginée pour apporter une touche féminine, élégante et unique à votre quotidien.</p>
+      <div class="about-items">
+        <div>🎀 Design girly</div>
+        <div>💌 Cadeaux personnalisés</div>
+        <div>✨ Qualité artisanale</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW TO ORDER ───────────────────────────────────────── -->
+  <section class="steps">
+    <div class="section-title"><p>Commande simple</p><h2>Comment commander ?</h2></div>
+    <div class="steps-grid">
+      <div class="step-card"><span>1</span><h3>Choisissez</h3><p>Sélectionnez vos produits préférés.</p></div>
+      <div class="step-card"><span>2</span><h3>Remplissez</h3><p>Ajoutez vos informations de livraison.</p></div>
+      <div class="step-card"><span>3</span><h3>Confirmez</h3><p>Votre commande sera préparée avec amour.</p></div>
+    </div>
+  </section>
+
+  <!-- ── FEEDBACK ───────────────────────────────────────────── -->
+  <section class="feedback-section" id="feedback">
+    <div class="section-title"><p>Avis clients</p><h2>Ce que disent nos clientes</h2></div>
+    <div class="feedback-grid" id="feedbackGrid">
+      <div class="feedback-card"><div class="stars">★★★★★</div><p>"J'ai adoré le packaging, très doux et girly !"</p><h4>- Lina</h4></div>
+      <div class="feedback-card"><div class="stars">★★★★★</div><p>"Produit magnifique, exactement comme sur la photo."</p><h4>- Mariem</h4></div>
+      <div class="feedback-card"><div class="stars">★★★★☆</div><p>"Très belle qualité handmade, je recommande."</p><h4>- Nour</h4></div>
+    </div>
+    <div class="feedback-form">
+      <h3>Laisser un feedback</h3>
+      <input type="text" id="feedbackName" placeholder="Votre nom" />
+      <select id="feedbackRating">
+        <option value="★★★★★">★★★★★</option>
+        <option value="★★★★☆">★★★★☆</option>
+        <option value="★★★☆☆">★★★☆☆</option>
+        <option value="★★☆☆☆">★★☆☆☆</option>
+        <option value="★☆☆☆☆">★☆☆☆☆</option>
+      </select>
+      <textarea id="feedbackText" placeholder="Votre avis..."></textarea>
+      <button id="sendFeedback">Envoyer</button>
+      <p id="feedbackMessage"></p>
+    </div>
+  </section>
+
+  <!-- ── CONTACT ────────────────────────────────────────────── -->
+  <section class="contact-section" id="contact">
+    <div class="contact-card">
+      <p class="tag">Contact</p>
+      <h2>Suivez-nous sur Instagram</h2>
+      <p>Découvrez nos nouveautés, commandes personnalisées, promotions et coulisses de création sur notre page Instagram.</p>
+      <div class="contact-buttons">
+        <a href="https://www.instagram.com/pearljewelry13/" target="_blank">📸 Instagram</a>
+        <a href="mailto:handmadebloom@email.com">💌 Email</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────── -->
+  <footer class="footer">
+    <h3>Handmade Bloom</h3>
+    <p>Créations handmade girly &amp; uniques</p>
+    <div class="footer-links">
+      <a href="#home">Accueil</a><a href="#products">Produits</a>
+      <a href="#feedback">Avis</a><a href="#contact">Contact</a>
+    </div>
+    <p class="footer-copy">© 2026 - Tous droits réservés</p>
+  </footer>
+
+  <!-- ── CART DRAWER ────────────────────────────────────────── -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <div><h2>Mon panier</h2><p>Vérifiez vos articles avant la commande</p></div>
+      <button id="closeCart">×</button>
+    </div>
+    <div id="cartItems"></div>
+    <div class="order-zone">
+      <h3>Zone de commande</h3>
+      <input type="text" id="customerName"    placeholder="Votre nom complet" />
+      <input type="text" id="customerPhone"   placeholder="Numéro de téléphone" />
+      <input type="text" id="customerAddress" placeholder="Adresse de livraison" />
+      <select id="deliveryMethod">
+        <option value="">Choisir la livraison</option>
+        <option value="domicile">Livraison à domicile - 7 DT</option>
+        <option value="pickup">Récupération sur place - Gratuit</option>
+      </select>
+      <textarea id="orderNote" placeholder="Note spéciale..."></textarea>
+    </div>
+    <div class="cart-footer">
+      <div class="total-line"><span>Sous-total</span><strong id="subTotal">0 DT</strong></div>
+      <div class="total-line"><span>Livraison</span><strong id="deliveryFee">0 DT</strong></div>
+      <div class="total-line grand-total"><span>Total</span><strong id="cartTotal">0 DT</strong></div>
+      <button class="checkout-btn" id="confirmOrder">Confirmer la commande</button>
+      <p class="order-message" id="orderMessage"></p>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════
+       🎡 MODAL ROUE — CLIENT
+       ══════════════════════════════════════════════════════════ -->
+  <div id="clientWheelModal">
+    <div class="client-wheel-box">
+      <button class="client-wheel-close" onclick="closeClientWheelModal()">✕</button>
+      <h2>🎡 Votre cadeau fidélité</h2>
+      <p>Commande de <strong id="wheelOrderAmount">0 DT</strong> — Tournez et découvrez votre surprise !</p>
+
+      <div class="client-wheel-canvas-wrap">
+        <div class="client-wheel-pointer"></div>
+        <canvas id="clientWheelCanvas" width="290" height="290"></canvas>
+      </div>
+
+      <div id="clientWheelResult"></div>
+
+      <button id="clientWheelSpinBtn" onclick="spinClientWheel()">🎡 Tourner !</button>
+      <button id="clientWheelClaimBtn" onclick="claimClientGift()">✅ Confirmer mon cadeau</button>
+
+      <p style="font-size:11px;color:#bbb;margin-top:14px;">
+        🌸 Points fidélité : gagnez des points à chaque commande et utilisez-les pour des réductions ou la livraison gratuite.
+      </p>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

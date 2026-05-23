@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Handmade Bloom</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Upload ── */
+    .upload-zone {
+      border: 2px dashed #ffb3d9; border-radius: 16px;
+      padding: 18px; text-align: center; cursor: pointer;
+      background: #fff8fb; transition: background 0.2s; grid-column: span 2;
+    }
+    .upload-zone:hover { background: #ffe8f3; }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-preview {
+      width: 86px; height: 86px; object-fit: cover;
+      border-radius: 12px; margin-top: 8px; border: 2px solid #ffb3d9;
+    }
+    .upload-label { color: #c2185b; font-weight: 600; font-size: 14px; margin-top: 6px; }
+    .upload-sub   { font-size: 12px; color: #bbb; margin-top: 3px; }
+    #uploadStatus { font-size: 13px; margin-top: 5px; }
+
+    /* ── Onglets commandes ── */
+    .orders-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .orders-tab {
+      padding: 8px 20px; border-radius: 20px;
+      border: 2px solid #ffb3d9; background: white;
+      color: #c05f8a; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; font-size: 14px;
+    }
+    .orders-tab.active {
+      background: linear-gradient(135deg, #ff7eb6, #b06abe);
+      color: white; border-color: transparent;
+    }
+    .badge-count {
+      background: #e91e8c; color: white;
+      border-radius: 10px; padding: 1px 7px; font-size: 12px; margin-left: 5px;
+    }
+    .orders-tab.active .badge-count { background: rgba(255,255,255,0.3); }
+
+    /* ── Tableau commandes ── */
+    .orders-table-wrap { overflow-x: auto; }
+    .orders-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .orders-table th {
+      background: linear-gradient(135deg, #ffe4f3, #f0d6ff);
+      color: #8a3a6a; padding: 12px 14px; text-align: left; font-weight: 700;
+    }
+    .orders-table td { padding: 11px 14px; border-bottom: 1px solid #ffe0f0; vertical-align: middle; }
+    .orders-table tr:hover td { background: #fff5fb; }
+    .statut-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .statut-badge.en-attente   { background: #fff3cd; color: #856404; }
+    .statut-badge.confirmee    { background: #d1ecf1; color: #0c5460; }
+    .statut-badge.en-livraison { background: #cce5ff; color: #004085; }
+    .statut-badge.livree       { background: #d4edda; color: #155724; }
+    .statut-badge.annulee      { background: #f8d7da; color: #721c24; }
+    .statut-select {
+      border: 1.5px solid #ffb3d9; border-radius: 10px;
+      padding: 5px 10px; font-size: 13px; color: #8a3a6a;
+      background: white; cursor: pointer;
+    }
+
+    /* ── Section livrées ── */
+    .livrees-section {
+      background: #f8fffe; border: 2px solid #b2dfdb;
+      border-radius: 20px; padding: 24px; margin-top: 30px;
+    }
+    .livrees-section-title {
+      font-size: 16px; font-weight: 700; color: #2e7d32;
+      margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+    }
+    .livrees-count-badge {
+      background: #2e7d32; color: white;
+      border-radius: 12px; padding: 2px 12px; font-size: 13px;
+    }
+    .livrees-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;
+    }
+    .livree-client-card {
+      background: white; border-radius: 14px; padding: 16px;
+      border: 1.5px solid #c8e6c9;
+    }
+    .livree-client-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .client-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff7eb6, #b06abe);
+      color: white; font-weight: 700; font-size: 17px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .client-name-label { font-weight: 700; color: #2e7d32; font-size: 15px; }
+    .client-nb-cmd     { font-size: 12px; color: #888; }
+    .livree-commande-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-top: 1px dashed #e8f5e9; font-size: 13px;
+    }
+    .livree-commande-num  { color: #555; font-weight: 600; }
+    .livree-commande-date { color: #aaa; font-size: 12px; }
+    .livree-commande-total{ color: #c2185b; font-weight: 700; }
+
+    /* ── Spinning Wheel modal ── */
+    .wheel-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 9000;
+      align-items: center; justify-content: center;
+    }
+    .wheel-modal.open { display: flex; }
+    .wheel-box {
+      background: white; border-radius: 24px; padding: 36px 40px;
+      text-align: center; max-width: 420px; width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .wheel-box h3 { font-size: 20px; color: #8a3a6a; margin-bottom: 6px; }
+    .wheel-box p  { font-size: 14px; color: #888; margin-bottom: 24px; }
+    .wheel-canvas-wrap {
+      position: relative; width: 280px; height: 280px; margin: 0 auto 20px;
+    }
+    #wheelCanvas { border-radius: 50%; display: block; }
+    .wheel-pointer {
+      position: absolute; top: -14px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 28px solid #c2185b;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    .wheel-spin-btn {
+      background: linear-gradient(135deg, #ff7eb6, #b06abe);
+      color: white; border: none; padding: 12px 36px;
+      border-radius: 24px; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s; margin-bottom: 10px;
+    }
+    .wheel-spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wheel-result {
+      font-size: 16px; font-weight: 700; color: #c2185b;
+      min-height: 26px; margin-bottom: 10px;
+    }
+    .wheel-close-btn {
+      background: none; border: 1.5px solid #ddd;
+      color: #888; padding: 8px 22px; border-radius: 20px;
+      font-size: 14px; cursor: pointer; margin-top: 6px;
+    }
+    .wheel-confirm-btn {
+      display: none;
+      background: linear-gradient(135deg, #43a047, #66bb6a);
+      color: white; border: none; padding: 10px 28px;
+      border-radius: 20px; font-size: 14px; font-weight: 700;
+      cursor: pointer; margin-top: 8px; margin-left: 8px;
+    }
+
+    /* ── Section cadeaux admin ── */
+    .gifts-panel {
+      background: #fffbf0; border: 2px solid #ffe082;
+      border-radius: 20px; padding: 24px; margin-top: 10px;
+    }
+    .gifts-panel-title {
+      font-size: 16px; font-weight: 700; color: #b45309;
+      margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+    }
+    .gifts-count-badge {
+      background: #b45309; color: white;
+      border-radius: 12px; padding: 2px 12px; font-size: 13px;
+    }
+    .gift-row {
+      background: white; border-radius: 14px; padding: 16px 20px;
+      border: 1.5px solid #ffe082; display: flex;
+      align-items: center; gap: 16px; margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .gift-avatar {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: linear-gradient(135deg, #ffd54f, #ff8f00);
+      color: white; font-weight: 700; font-size: 19px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .gift-info   { flex: 1; min-width: 120px; }
+    .gift-name   { font-weight: 700; color: #333; font-size: 15px; }
+    .gift-detail { font-size: 13px; color: #888; margin-top: 2px; }
+    .gift-type-tag {
+      padding: 5px 16px; border-radius: 20px; font-size: 13px;
+      font-weight: 700; white-space: nowrap;
+    }
+    .tag-livraison    { background: #e3f2fd; color: #1565c0; }
+    .tag-produit      { background: #fce4ec; color: #c2185b; }
+    .tag-personnalise { background: #f3e5f5; color: #6a1b9a; }
+    .gift-spin-btn {
+      padding: 8px 20px; border-radius: 14px; font-size: 13px;
+      font-weight: 700; cursor: pointer; border: none;
+      background: linear-gradient(135deg, #ff7eb6, #b06abe);
+      color: white; white-space: nowrap;
+    }
+
+    /* ── Points table ── */
+    .progress-bar-wrap { min-width: 140px; }
+    .progress-bar {
+      height: 8px; border-radius: 10px;
+      background: #f3e5f5; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff7eb6, #b06abe);
+      border-radius: 10px; transition: width 0.5s;
+    }
+    .progress-label { font-size: 12px; color: #888; margin-top: 3px; }
+
+    /* ── Stat card gift ── */
+    .stat-card.gift-stat {
+      border: 2px solid #ffe082;
+      background: linear-gradient(135deg, #fffde7, #fff8e1);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header admin-top-header">
+    <a href="index.html" class="logo">
+      <img src="image/logo.png" alt="Logo Handmade Bloom" />
+      <span>Handmade Bloom — Administration</span>
+    </a>
+    <nav class="navbar" id="navbar">
+      <a href="#dashboard">Dashboard</a>
+      <a href="#productsAdmin">Produits</a>
+      <a href="#ordersAdmin">Commandes</a>
+      <a href="#giftsAdmin">Cadeaux</a>
+      <a href="#feedbackAdmin">Feedbacks</a>
+      <a href="index.html">Voir le site</a>
+    </nav>
+    <button class="cart-btn" id="logoutBtn">Déconnexion</button>
+  </header>
+
+  <main class="admin-bloom-page">
+
+    <!-- HERO -->
+    <section class="admin-bloom-hero" id="dashboard">
+      <div class="admin-bloom-text">
+        <p class="tag">Espace administrateur</p>
+        <h1>Gestion de la boutique Handmade Bloom</h1>
+        <p>Gérez les produits, consultez les commandes, suivez les feedbacks et les cadeaux fidélité.</p>
+      </div>
+      <div class="admin-bloom-card">
+        <img src="image/logo.png" alt="Logo" />
+        <h3>Tableau de bord</h3>
+        <p>Interface de gestion centralisée.</p>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="admin-bloom-stats">
+      <div class="stat-card">
+        <span>—</span>
+        <h3 id="totalProducts">—</h3>
+        <p>Produits</p>
+      </div>
+      <div class="stat-card">
+        <span>—</span>
+        <h3 id="totalOrders">—</h3>
+        <p>Commandes</p>
+      </div>
+      <div class="stat-card">
+        <span>—</span>
+        <h3 id="totalLivrees">—</h3>
+        <p>Livrées</p>
+      </div>
+      <div class="stat-card">
+        <span>—</span>
+        <h3 id="totalFeedbacks">—</h3>
+        <p>Feedbacks</p>
+      </div>
+      <div class="stat-card">
+        <span>—</span>
+        <h3 id="totalRevenue">—</h3>
+        <p>Revenu total</p>
+      </div>
+      <div class="stat-card gift-stat">
+        <span>—</span>
+        <h3 id="totalGifts">—</h3>
+        <p>Cadeaux à offrir</p>
+      </div>
+    </section>
+
+    <!-- PRODUITS -->
+    <section class="admin-bloom-section" id="productsAdmin">
+      <div class="section-title">
+        <p>Produits</p>
+        <h2>Gestion des produits</h2>
+      </div>
+
+      <div class="admin-bloom-form">
+        <input type="hidden" id="editProductId" />
+        <input type="text"   id="productName"  placeholder="Nom du produit" />
+        <input type="number" id="productPrice" placeholder="Prix en DT" />
+
+        <select id="productCategory">
+          <option value="bijoux">Bijoux</option>
+          <option value="bougies">Bougies</option>
+          <option value="accessoires">Accessoires</option>
+        </select>
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageFileInput').click()">
+          <input type="file" id="imageFileInput" accept="image/*" />
+          <div id="uploadPlaceholder">
+            <div class="upload-label">Cliquer pour uploader une image depuis le PC</div>
+            <div class="upload-sub">JPG, PNG, WEBP — max 5 Mo</div>
+          </div>
+          <img id="uploadPreview" class="upload-preview" style="display:none" alt="Prévisualisation" />
+          <div id="uploadStatus"></div>
+        </div>
+
+        <input type="text" id="productImage"  placeholder="Ou saisir le chemin : image/A1.jpg" style="grid-column:span 2" />
+        <input type="text" id="productBadge"  placeholder="Badge : Nouveau, Promo..." />
+        <input type="text" id="productRating" placeholder="Rating : 4.9" />
+        <textarea id="productDesc" placeholder="Description du produit"></textarea>
+
+        <button id="saveProductBtn" style="grid-column:span 2">Ajouter le produit</button>
+      </div>
+
+      <div class="admin-bloom-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Image</th><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminProductsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- COMMANDES -->
+    <section class="admin-bloom-section" id="ordersAdmin">
+      <div class="section-title">
+        <p>Commandes</p>
+        <h2>Commandes clientes</h2>
+      </div>
+
+      <div class="orders-tabs">
+        <button class="orders-tab active" data-filter="all">Toutes <span class="badge-count" id="cnt-all">0</span></button>
+        <button class="orders-tab" data-filter="en attente">En attente <span class="badge-count" id="cnt-attente">0</span></button>
+        <button class="orders-tab" data-filter="confirmée">Confirmées <span class="badge-count" id="cnt-confirmee">0</span></button>
+        <button class="orders-tab" data-filter="en livraison">En livraison <span class="badge-count" id="cnt-livraison">0</span></button>
+        <button class="orders-tab" data-filter="annulée">Annulées <span class="badge-count" id="cnt-annulee">0</span></button>
+      </div>
+
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Client</th><th>Téléphone</th><th>Adresse</th>
+              <th>Total</th><th>Livraison</th><th>Date</th><th>Statut</th><th>Modifier</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Commandes livrées regroupées par client -->
+      <div class="livrees-section">
+        <div class="livrees-section-title">
+          Commandes livrées
+          <span class="livrees-count-badge" id="livrees-count">0</span>
+        </div>
+        <div class="livrees-grid" id="livreesGrid">
+          <p style="color:#aaa;font-size:14px">Aucune commande livrée.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CADEAUX -->
+    <section class="admin-bloom-section" id="giftsAdmin">
+      <div class="section-title">
+        <p>Fidélité</p>
+        <h2>Cadeaux &amp; Points fidélité</h2>
+      </div>
+
+      <!-- Règles roue -->
+      <div style="background:#f9f0ff;border-radius:16px;padding:18px 22px;margin-bottom:24px;font-size:14px;color:#6a1b9a;line-height:1.7">
+        <strong>🎡 Roue :</strong> apparaît automatiquement après chaque commande ≥ <strong>50 DT</strong><br>
+        <strong>⭐ Points :</strong> <strong>5 pts</strong> gagnés par tranche de <strong>10 DT</strong> commandés (automatique)<br>
+        Les segments de la roue sont <strong>configurables ci-dessous</strong> par l'admin.
+      </div>
+
+      <!-- Cadeaux en attente de traitement -->
+      <div class="gifts-panel" style="margin-bottom:28px;">
+        <div class="gifts-panel-title">
+          🎁 Cadeaux en attente de traitement
+          <span class="gifts-count-badge" id="giftsCount">0</span>
+        </div>
+        <div id="pendingSpinsList">
+          <p style="color:#aaa;font-size:14px">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- Suivi clients + points -->
+      <div style="margin-top:10px;margin-bottom:30px;">
+        <h3 style="color:#8a3a6a;margin-bottom:16px;font-size:16px">Suivi clients — montants &amp; points</h3>
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Client</th><th>Email</th><th>Total dépensé</th>
+                <th>Commandes livrées</th><th>Points fidélité</th><th>Cadeau gagné</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pointsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Configuration de la roue -->
+      <div style="background:#fff8ff;border:1px solid #e8d0f0;border-radius:18px;padding:24px;margin-top:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+          <h3 style="color:#8a3a6a;font-size:17px;margin:0;">🎡 Configuration de la Roue</h3>
+          <button id="saveWheelConfigBtn" style="
+            background:linear-gradient(135deg,#ff7eb6,#b06abe);color:#fff;border:none;
+            border-radius:20px;padding:10px 22px;font-weight:700;cursor:pointer;font-size:14px;
+            box-shadow:0 4px 14px rgba(176,106,190,0.35);">
+            💾 Sauvegarder la roue
+          </button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:18px;">
+          Modifiez les segments, leurs labels, couleurs, types et seuils minimum.
+          Les changements sont pris en compte immédiatement pour tous les clients.
+        </p>
+        <div id="wheelConfigList">
+          <p style="color:#aaa;">Chargement de la configuration...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEEDBACKS -->
+    <section class="admin-bloom-section" id="feedbackAdmin">
+      <div class="section-title">
+        <p>Avis</p>
+        <h2>Feedbacks clients</h2>
+      </div>
+      <div id="feedbackList" class="orders-list"></div>
+    </section>
+
+  </main>
+
+  <!-- Wheel modal supprimé : la roue est maintenant côté client -->
+
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

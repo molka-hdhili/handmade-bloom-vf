@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription - Handmade Bloom</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="header">
+    <a href="index.html" class="logo">
+      <img src="image/logo.png" alt="Logo Handmade Bloom" />
+      <span>Handmade Bloom</span>
+    </a>
+
+    <nav class="navbar" id="navbar">
+      <a href="index.html">Accueil</a>
+      <a href="index.html#products">Produits</a>
+      <a href="index.html#about">À propos</a>
+      <a href="index.html#contact">Contact</a>
+      <a href="login.html">Connexion</a>
+    </nav>
+  </header>
+
+  <main class="auth-home-page">
+    <section class="auth-home-hero">
+      <div class="auth-home-text">
+        <p class="tag">Join us</p>
+        <h1>Créez votre compte Handmade Bloom</h1>
+        <p>
+          Rejoignez notre univers doux, créatif et handmade pour profiter
+          d'une expérience personnalisée.
+        </p>
+
+        <div class="hero-stats auth-stats-mini">
+          <div><h3>🌸</h3><span>Produits uniques</span></div>
+          <div><h3>🎁</h3><span>Cadeaux</span></div>
+          <div><h3>💖</h3><span>With love</span></div>
+        </div>
+      </div>
+
+      <div class="auth-home-card">
+        <div class="auth-card-top">
+          <img src="image/logo.png" alt="Logo Handmade Bloom" />
+          <div>
+            <h2>Sign up</h2>
+            <p>Créez votre compte en quelques secondes.</p>
+          </div>
+        </div>
+
+        <div class="auth-form-beauty">
+          <label for="registerName">Nom complet</label>
+          <input type="text" id="registerName" placeholder="Votre nom complet" autocomplete="name" />
+
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" placeholder="exemple@email.com" autocomplete="email" />
+
+          <label for="registerPassword">Mot de passe</label>
+          <input type="password" id="registerPassword" placeholder="Minimum 6 caractères" autocomplete="new-password" />
+
+          <label for="confirmPassword">Confirmer le mot de passe</label>
+          <input type="password" id="confirmPassword" placeholder="Confirmer le mot de passe" autocomplete="new-password" />
+
+          <button id="registerBtn">Créer mon compte</button>
+          <p id="registerMessage" class="auth-message-beauty"></p>
+        </div>
+
+        <p class="auth-switch-beauty">
+          Vous avez déjà un compte ?
+          <a href="login.html">Se connecter</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>
