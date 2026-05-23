@@ -43,10 +43,3 @@ handmade-bloom/
 └── image/
     └── ...             ← Photos produits, logo, owners
 ```
-
-
-- Le CSS et les interfaces sont **identiques** à la version originale
-- Les fichiers React/TypeScript/Next.js ont été supprimés
-- Le PHP procédural a été remplacé par du PHP OOP avec classes
-- Les données JSON (fichiers plats) ont été remplacées par MySQL
-- Toute la logique frontend utilise désormais du JavaScript vanilla (ES6+)
